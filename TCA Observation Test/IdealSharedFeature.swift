@@ -31,27 +31,76 @@ import SwiftUI
 //  }
 //}
 
-//@dynamicMemberLookup
+@dynamicMemberLookup
+@Perceptible
+final class Reference<Value>: Equatable {
+  init(_ value: Value, perceptionRegistrar: PerceptionRegistrar) {
+    self.value = value
+    self._$perceptionRegistrar = perceptionRegistrar
+  }
+  var value: Value
+  @PerceptionIgnored
+  var _$perceptionRegistrar: PerceptionRegistrar
+  @PerceptionIgnored
+  var accesses: Set<Access> = []
+  struct Access: Hashable {
+    let kp: PartialKeyPath<Value>
+    let t: Any.Type
+    let hash: AnyHashable
+    func apply(_ value: inout Value, from: Value) {
+      func open<T>(_ type: T.Type) -> WritableKeyPath<Value, T> {
+        kp as! WritableKeyPath<Value, T>
+      }
+      let keyPath = _openExistential(t, do: open)
+      value[keyPath: keyPath] = from[keyPath: keyPath]
+    }
+    static func == (lhs: Access, rhs: Access) -> Bool {
+      lhs.hash == rhs.hash
+    }
+    func hash(into hasher: inout Hasher) {
+      hasher.combine(hash)
+    }
+  }
+  subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T>) -> T {
+    accesses.insert(
+      Access(kp: keyPath, t: T.self, hash: keyPath)
+    )
+    _$perceptionRegistrar.access(self, keyPath: \.value)
+    return value[keyPath: keyPath]
+  }
+  static func == (lhs: Reference<Value>, rhs: Reference<Value>) -> Bool {
+    lhs === rhs
+  }
+}
+
 @propertyWrapper
-@Observable
+@Perceptible
 final class SharedState<Value: Equatable> {
-  @ObservationIgnored
+  @PerceptionIgnored
   var sharedValue: Shared<Value>
-  var wrappedValue: Value
-  var accesses: [PartialKeyPath<Value>] = []
+  @PerceptionIgnored
+  var reference: Reference<Value>
+  @PerceptionIgnored
   var cancellable: AnyCancellable?
   init(_ sharedValue: Shared<Value>) {
     self.sharedValue = Shared(projectedValue: sharedValue)
-    self.wrappedValue = sharedValue.wrappedValue
+    self.reference = Reference(sharedValue.wrappedValue, perceptionRegistrar: _$perceptionRegistrar)
     self.cancellable = sharedValue.publisher.sink { [weak self] value in
       guard let self else { return }
-      if value != self.wrappedValue {
-        self.wrappedValue = value
+      if value != self.reference.value {
+        for a in self.reference.accesses {
+          print("A", a)
+          a.apply(&self.reference.value, from: value)
+          //let x = value[keyPath: a]
+        }
       }
     }
   }
   var projectedValue: SharedState {
     self
+  }
+  var wrappedValue: Reference<Value> {
+    reference
   }
   public func withLock<R>(
     _ operation: (inout Value) throws -> R,
@@ -62,11 +111,6 @@ final class SharedState<Value: Equatable> {
   ) rethrows -> R {
     try sharedValue.withLock(operation)
   }
-  //  subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T>) -> T {
-  //    accesses.append(keyPath)
-  //    _$observationRegistrar.access(Self, keyPath: keyPath)
-  //    return local[keyPath: keyPath]
-  //  }
 }
 
 extension SharedState: Equatable {
@@ -80,7 +124,7 @@ public struct IdealSharedRootFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @SharedState var root: RootValue
+    @SharedState var root: Reference<RootValue>
     var child1: IdealSharedChildFeature.State
     var child2: IdealSharedChildFeature.State
     init(root: Shared<RootValue> = Shared(value: .init())) {
@@ -118,7 +162,7 @@ public struct IdealSharedChildFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @SharedState var child: ChildValue
+    @SharedState var child: Reference<ChildValue>
     init(child: Shared<ChildValue>) {
       _child = SharedState(child)
     }
