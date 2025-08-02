@@ -4,51 +4,24 @@ import Perception
 import Sharing
 import SwiftUI
 
-//final class SharedState: SharedReaderKey, @unchecked Sendable {
-//  typealias Value = ChildValue
-//
-//  @Shared var sharedValue: ChildValue
-//  var currentValue: LockIsolated<ChildValue>
-//
-//  init(_ sharedValue: Shared<ChildValue>) {
-//    self._sharedValue = sharedValue
-//    self.currentValue = LockIsolated(sharedValue.wrappedValue)
-//  }
-//
-//
-//  var id: String { "foo" }
-//  func load(context: LoadContext<Value>, continuation: LoadContinuation<Value>) {
-//    continuation.resumeReturningInitialValue()
-//  }
-//  func subscribe(context: LoadContext<Value>, subscriber: SharedSubscriber<Value>) -> SharedSubscription {
-//    let cancellable = $sharedValue.publisher.sink { [weak self] value in
-//      guard let self else { return }
-//      self.currentValue.setValue(value)
-//    }
-//    return SharedSubscription {
-//      cancellable.cancel()
-//    }
-//  }
-//}
-
 @dynamicMemberLookup
 @Perceptible
 final class SharedView<Value: Equatable>: Equatable {
-  init(_ value: Value) {
-    self.value = value
-  }
   var value: Value
   @PerceptionIgnored var accesses: Set<Access> = []
+  init(_ value: Shared<Value>) {
+    self.value = value.wrappedValue
+  }
   struct Access: Hashable {
     let kp: PartialKeyPath<Value>
     let t: Any.Type
     let hash: AnyHashable
-    func apply(_ value: inout Value, from: Value) {
+    func isEqual(_ lhs: Value, _ rhs: Value) -> Bool {
       func open<T>(_ type: T.Type) -> WritableKeyPath<Value, T> {
         kp as! WritableKeyPath<Value, T>
       }
       let keyPath = _openExistential(t, do: open)
-      value[keyPath: keyPath] = from[keyPath: keyPath]
+      return _isEqual(lhs[keyPath: keyPath], rhs[keyPath: keyPath]) ?? false
     }
     static func == (lhs: Access, rhs: Access) -> Bool {
       lhs.hash == rhs.hash
@@ -57,21 +30,27 @@ final class SharedView<Value: Equatable>: Equatable {
       hasher.combine(hash)
     }
   }
-  func updateAccessedKeyPaths(_ newValue: Value) {
-    if value != newValue {
-      for access in self.accesses {
-        access.apply(&self.value, from: newValue)
-      }
+  func updateIfNeeded(_ newValue: Value) {
+    if accesses.contains(where: { !$0.isEqual(value, newValue) }) {
+      value = newValue
     }
   }
   subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T>) -> T {
-    accesses.insert(
-      Access(kp: keyPath, t: T.self, hash: keyPath)
-    )
+    accesses.insert(Access(kp: keyPath, t: T.self, hash: keyPath))
     return value[keyPath: keyPath]
   }
   static func == (lhs: SharedView<Value>, rhs: SharedView<Value>) -> Bool {
-    lhs === rhs
+    lhs.value == rhs.value
+  }
+}
+
+fileprivate func _isEqual(_ lhs: Any, _ rhs: Any) -> Bool? {
+  (lhs as? any Equatable)?.isEqual(other: rhs)
+}
+
+extension Equatable {
+  fileprivate func isEqual(other: Any) -> Bool {
+    self == other as? Self
   }
 }
 
@@ -83,10 +62,10 @@ final class SharedState<Value: Equatable> {
   @PerceptionIgnored var cancellable: AnyCancellable?
   init(_ sharedValue: Shared<Value>) {
     self.sharedValue = Shared(projectedValue: sharedValue)
-    self.sharedView = SharedView(sharedValue.wrappedValue)
+    self.sharedView = SharedView(sharedValue)
     self.cancellable = sharedValue.publisher.sink { [weak self] value in
       guard let self else { return }
-      self.sharedView.updateAccessedKeyPaths(value)
+      self.sharedView.updateIfNeeded(value)
     }
   }
   var projectedValue: SharedState {
