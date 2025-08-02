@@ -33,16 +33,12 @@ import SwiftUI
 
 @dynamicMemberLookup
 @Perceptible
-final class Reference<Value>: Equatable {
-  init(_ value: Value, perceptionRegistrar: PerceptionRegistrar) {
+final class SharedView<Value: Equatable>: Equatable {
+  init(_ value: Value) {
     self.value = value
-    self._$perceptionRegistrar = perceptionRegistrar
   }
   var value: Value
-  @PerceptionIgnored
-  var _$perceptionRegistrar: PerceptionRegistrar
-  @PerceptionIgnored
-  var accesses: Set<Access> = []
+  @PerceptionIgnored var accesses: Set<Access> = []
   struct Access: Hashable {
     let kp: PartialKeyPath<Value>
     let t: Any.Type
@@ -61,14 +57,20 @@ final class Reference<Value>: Equatable {
       hasher.combine(hash)
     }
   }
+  func updateAccessedKeyPaths(_ newValue: Value) {
+    if value != newValue {
+      for access in self.accesses {
+        access.apply(&self.value, from: newValue)
+      }
+    }
+  }
   subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T>) -> T {
     accesses.insert(
       Access(kp: keyPath, t: T.self, hash: keyPath)
     )
-    _$perceptionRegistrar.access(self, keyPath: \.value)
     return value[keyPath: keyPath]
   }
-  static func == (lhs: Reference<Value>, rhs: Reference<Value>) -> Bool {
+  static func == (lhs: SharedView<Value>, rhs: SharedView<Value>) -> Bool {
     lhs === rhs
   }
 }
@@ -76,31 +78,22 @@ final class Reference<Value>: Equatable {
 @propertyWrapper
 @Perceptible
 final class SharedState<Value: Equatable> {
-  @PerceptionIgnored
-  var sharedValue: Shared<Value>
-  @PerceptionIgnored
-  var reference: Reference<Value>
-  @PerceptionIgnored
-  var cancellable: AnyCancellable?
+  @PerceptionIgnored var sharedValue: Shared<Value>
+  @PerceptionIgnored var sharedView: SharedView<Value>
+  @PerceptionIgnored var cancellable: AnyCancellable?
   init(_ sharedValue: Shared<Value>) {
     self.sharedValue = Shared(projectedValue: sharedValue)
-    self.reference = Reference(sharedValue.wrappedValue, perceptionRegistrar: _$perceptionRegistrar)
+    self.sharedView = SharedView(sharedValue.wrappedValue)
     self.cancellable = sharedValue.publisher.sink { [weak self] value in
       guard let self else { return }
-      if value != self.reference.value {
-        for a in self.reference.accesses {
-          print("A", a)
-          a.apply(&self.reference.value, from: value)
-          //let x = value[keyPath: a]
-        }
-      }
+      self.sharedView.updateAccessedKeyPaths(value)
     }
   }
   var projectedValue: SharedState {
     self
   }
-  var wrappedValue: Reference<Value> {
-    reference
+  var wrappedValue: SharedView<Value> {
+    sharedView
   }
   public func withLock<R>(
     _ operation: (inout Value) throws -> R,
@@ -124,7 +117,7 @@ public struct IdealSharedRootFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @SharedState var root: Reference<RootValue>
+    @SharedState var root: SharedView<RootValue>
     var child1: IdealSharedChildFeature.State
     var child2: IdealSharedChildFeature.State
     init(root: Shared<RootValue> = Shared(value: .init())) {
@@ -162,7 +155,7 @@ public struct IdealSharedChildFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @SharedState var child: Reference<ChildValue>
+    @SharedState var child: SharedView<ChildValue>
     init(child: Shared<ChildValue>) {
       _child = SharedState(child)
     }
