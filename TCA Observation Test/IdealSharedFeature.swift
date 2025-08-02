@@ -31,11 +31,13 @@ final class SharedView<Value: Equatable>: Equatable {
     }
   }
   func updateIfNeeded(_ newValue: Value) {
+    // Check if any accessed fields have changed. If so, update the entire value.
     if accesses.contains(where: { !$0.isEqual(value, newValue) }) {
       value = newValue
     }
   }
   subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T>) -> T {
+    // Track each field access.
     accesses.insert(Access(kp: keyPath, t: T.self, hash: keyPath))
     return value[keyPath: keyPath]
   }
@@ -91,6 +93,8 @@ extension SharedState: Equatable {
   }
 }
 
+/// This version attempts to match the efficiency of StateFeature by using
+/// experimental tools over Shared to reduce over-observation.
 @Reducer
 public struct IdealSharedRootFeature {
   @ObservableState

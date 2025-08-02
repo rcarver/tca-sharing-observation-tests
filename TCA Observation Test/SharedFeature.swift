@@ -2,6 +2,8 @@ import ComposableArchitecture
 import Perception
 import SwiftUI
 
+/// This version implements the same feature but using Shared data. It suffers
+/// from over-observation, updating the entire hierarchy on any change.
 @Reducer
 public struct SharedRootFeature {
   @ObservableState

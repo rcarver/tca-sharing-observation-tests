@@ -2,6 +2,7 @@ import ComposableArchitecture
 import Perception
 import SwiftUI
 
+/// This version implements a purely state-based UI which shows minimal observation.
 @Reducer
 public struct RootFeature {
   @ObservableState
