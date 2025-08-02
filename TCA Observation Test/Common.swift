@@ -1,15 +1,13 @@
 import SwiftUI
 import ComposableArchitecture
 
-@ObservableState
-struct RootValue: Equatable {
+struct RootValue: Equatable, Sendable {
   var count = 0
   var child1 = ChildValue()
   var child2 = ChildValue()
 }
 
-@ObservableState
-struct ChildValue: Equatable {
+struct ChildValue: Equatable, Sendable {
   var toggle1 = false
   var toggle2 = false
 }
