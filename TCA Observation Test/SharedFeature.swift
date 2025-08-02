@@ -6,6 +6,7 @@ import SwiftUI
 public struct SharedRootFeature {
   @ObservableState
   public struct State: Equatable {
+    @ObservationStateIgnored
     @Shared var root: RootValue
     var child1: SharedChildFeature.State
     var child2: SharedChildFeature.State
@@ -43,6 +44,7 @@ public struct SharedRootFeature {
 public struct SharedChildFeature {
   @ObservableState
   public struct State: Equatable {
+    @ObservationStateIgnored
     @Shared var child: ChildValue
     init(
       child: Shared<ChildValue>
