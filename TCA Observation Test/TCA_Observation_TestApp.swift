@@ -1,17 +1,16 @@
-//
-//  TCA_Observation_TestApp.swift
-//  TCA Observation Test
-//
-//  Created by Ryan Carver on 8/1/25.
-//
-
+import ComposableArchitecture
 import SwiftUI
 
 @main
 struct TCA_Observation_TestApp: App {
+  static let store = Store(
+    initialState: IdealSharedRootFeature.State()
+  ) {
+    IdealSharedRootFeature()
+  }
     var body: some Scene {
         WindowGroup {
-            ContentView()
+          IdealSharedRootView(store: Self.store)
         }
     }
 }
