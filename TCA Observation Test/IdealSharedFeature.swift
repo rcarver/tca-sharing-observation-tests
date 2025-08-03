@@ -6,10 +6,10 @@ import SwiftUI
 
 @dynamicMemberLookup
 @Perceptible
-final class Observed<Value: Equatable>: Equatable {
+public final class Observed<Value: Equatable>: Equatable {
   var value: Value
   @PerceptionIgnored var accesses: Set<Access> = []
-  init(_ value: Shared<Value>) {
+  public init(_ value: Shared<Value>) {
     self.value = value.wrappedValue
   }
   struct Access: Hashable {
@@ -17,8 +17,8 @@ final class Observed<Value: Equatable>: Equatable {
     let t: Any.Type
     let hash: AnyHashable
     func isEqual(_ lhs: Value, _ rhs: Value) -> Bool {
-      func open<T>(_ type: T.Type) -> WritableKeyPath<Value, T> {
-        kp as! WritableKeyPath<Value, T>
+      func open<T>(_ type: T.Type) -> KeyPath<Value, T> {
+        kp as! KeyPath<Value, T>
       }
       let keyPath = _openExistential(t, do: open)
       return _isEqual(lhs[keyPath: keyPath], rhs[keyPath: keyPath]) ?? false
@@ -36,12 +36,15 @@ final class Observed<Value: Equatable>: Equatable {
       value = newValue
     }
   }
-  subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T>) -> T {
+  public var wrappedValue: Value {
+    value
+  }
+  public subscript<T>(dynamicMember keyPath: KeyPath<Value, T>) -> T {
     // Track each field access.
     accesses.insert(Access(kp: keyPath, t: T.self, hash: keyPath))
     return value[keyPath: keyPath]
   }
-  static func == (lhs: Observed<Value>, rhs: Observed<Value>) -> Bool {
+  public static func == (lhs: Observed<Value>, rhs: Observed<Value>) -> Bool {
     lhs.value == rhs.value
   }
 }
@@ -60,11 +63,11 @@ extension Equatable {
 /// the shared value updates, it efficiently that value to only modify accessed fields.
 @propertyWrapper
 @Perceptible
-final class ObservedShared<Value: Equatable> {
+public final class ObservedShared<Value: Equatable> {
   @PerceptionIgnored var sharedValue: Shared<Value>
   @PerceptionIgnored var sharedView: Observed<Value>
   @PerceptionIgnored var cancellable: AnyCancellable?
-  init(_ sharedValue: Shared<Value>) {
+  public init(_ sharedValue: Shared<Value>) {
     self.sharedValue = Shared(projectedValue: sharedValue)
     self.sharedView = Observed(sharedValue)
     self.cancellable = sharedValue.publisher.sink { [weak self] value in
@@ -72,10 +75,10 @@ final class ObservedShared<Value: Equatable> {
       self.sharedView.updateIfNeeded(value)
     }
   }
-  var projectedValue: ObservedShared {
+  public var projectedValue: ObservedShared {
     self
   }
-  var wrappedValue: Observed<Value> {
+  public var wrappedValue: Observed<Value> {
     sharedView
   }
   public func withLock<R>(
@@ -90,11 +93,11 @@ final class ObservedShared<Value: Equatable> {
 }
 
 extension ObservedShared: Equatable {
-  static func == (lhs: ObservedShared, rhs: ObservedShared) -> Bool {
+  public static func == (lhs: ObservedShared, rhs: ObservedShared) -> Bool {
     lhs.sharedValue == rhs.sharedValue
   }
 }
-
+ç
 /// This version attempts to match the efficiency of StateFeature by using
 /// experimental tools over Shared to reduce over-observation.
 @Reducer
