@@ -6,7 +6,7 @@ import SwiftUI
 
 @dynamicMemberLookup
 @Perceptible
-final class SharedView<Value: Equatable>: Equatable {
+final class Observed<Value: Equatable>: Equatable {
   var value: Value
   @PerceptionIgnored var accesses: Set<Access> = []
   init(_ value: Shared<Value>) {
@@ -41,7 +41,7 @@ final class SharedView<Value: Equatable>: Equatable {
     accesses.insert(Access(kp: keyPath, t: T.self, hash: keyPath))
     return value[keyPath: keyPath]
   }
-  static func == (lhs: SharedView<Value>, rhs: SharedView<Value>) -> Bool {
+  static func == (lhs: Observed<Value>, rhs: Observed<Value>) -> Bool {
     lhs.value == rhs.value
   }
 }
@@ -56,24 +56,26 @@ extension Equatable {
   }
 }
 
+/// A simple wrapper over Shared that causes all access to go through `Observed`. When
+/// the shared value updates, it efficiently that value to only modify accessed fields.
 @propertyWrapper
 @Perceptible
-final class SharedState<Value: Equatable> {
+final class ObservedShared<Value: Equatable> {
   @PerceptionIgnored var sharedValue: Shared<Value>
-  @PerceptionIgnored var sharedView: SharedView<Value>
+  @PerceptionIgnored var sharedView: Observed<Value>
   @PerceptionIgnored var cancellable: AnyCancellable?
   init(_ sharedValue: Shared<Value>) {
     self.sharedValue = Shared(projectedValue: sharedValue)
-    self.sharedView = SharedView(sharedValue)
+    self.sharedView = Observed(sharedValue)
     self.cancellable = sharedValue.publisher.sink { [weak self] value in
       guard let self else { return }
       self.sharedView.updateIfNeeded(value)
     }
   }
-  var projectedValue: SharedState {
+  var projectedValue: ObservedShared {
     self
   }
-  var wrappedValue: SharedView<Value> {
+  var wrappedValue: Observed<Value> {
     sharedView
   }
   public func withLock<R>(
@@ -87,8 +89,8 @@ final class SharedState<Value: Equatable> {
   }
 }
 
-extension SharedState: Equatable {
-  static func == (lhs: SharedState, rhs: SharedState) -> Bool {
+extension ObservedShared: Equatable {
+  static func == (lhs: ObservedShared, rhs: ObservedShared) -> Bool {
     lhs.sharedValue == rhs.sharedValue
   }
 }
@@ -100,11 +102,11 @@ public struct IdealSharedRootFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @SharedState var root: SharedView<RootValue>
+    @ObservedShared var root: Observed<RootValue>
     var child1: IdealSharedChildFeature.State
     var child2: IdealSharedChildFeature.State
     init(root: Shared<RootValue> = Shared(value: .init())) {
-      _root = SharedState(root)
+      _root = ObservedShared(root)
       child1 = IdealSharedChildFeature.State(child: root.child1)
       child2 = IdealSharedChildFeature.State(child: root.child2)
     }
@@ -142,9 +144,9 @@ public struct IdealSharedChildFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @SharedState var child: SharedView<ChildValue>
+    @ObservedShared var child: Observed<ChildValue>
     init(child: Shared<ChildValue>) {
-      _child = SharedState(child)
+      _child = ObservedShared(child)
     }
   }
   public enum Action: Sendable, BindableAction {
