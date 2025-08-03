@@ -65,21 +65,21 @@ extension Equatable {
 @Perceptible
 public final class ObservedShared<Value: Equatable> {
   @PerceptionIgnored var sharedValue: Shared<Value>
-  @PerceptionIgnored var sharedView: Observed<Value>
+  @PerceptionIgnored var observedValue: Observed<Value>
   @PerceptionIgnored var cancellable: AnyCancellable?
   public init(_ sharedValue: Shared<Value>) {
-    self.sharedValue = Shared(projectedValue: sharedValue)
-    self.sharedView = Observed(sharedValue)
+    self.sharedValue = sharedValue
+    self.observedValue = Observed(sharedValue)
     self.cancellable = sharedValue.publisher.sink { [weak self] value in
       guard let self else { return }
-      self.sharedView.updateIfNeeded(value)
+      self.observedValue.updateIfNeeded(value)
     }
   }
   public var projectedValue: ObservedShared {
     self
   }
   public var wrappedValue: Observed<Value> {
-    sharedView
+    observedValue
   }
   public func withLock<R>(
     _ operation: (inout Value) throws -> R,
@@ -97,7 +97,7 @@ extension ObservedShared: Equatable {
     lhs.sharedValue == rhs.sharedValue
   }
 }
-ç
+
 /// This version attempts to match the efficiency of StateFeature by using
 /// experimental tools over Shared to reduce over-observation.
 @Reducer
