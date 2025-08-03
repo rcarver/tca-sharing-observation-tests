@@ -112,6 +112,7 @@ public struct IdealSharedRootFeature {
   public enum Action: Sendable {
     case child1(IdealSharedChildFeature.Action)
     case child2(IdealSharedChildFeature.Action)
+    case child1ToggleButtonTapped
     case incrementButtonTapped
   }
   public var body: some ReducerOf<Self> {
@@ -124,6 +125,9 @@ public struct IdealSharedRootFeature {
     Reduce { state, action in
       switch action {
       case .child1, .child2:
+        return .none
+      case .child1ToggleButtonTapped:
+        state.$root.withLock { $0.child1.toggle1.toggle() }
         return .none
       case .incrementButtonTapped:
         state.$root.withLock { $0.count += 1 }
@@ -177,6 +181,9 @@ struct IdealSharedRootView: View {
       Text(store.root.count.formatted())
       Button("Increment") {
         store.send(.incrementButtonTapped)
+      }
+      Button("Toggle child 1 toggle 1") {
+        store.send(.child1ToggleButtonTapped)
       }
       HStack {
         VStack {
