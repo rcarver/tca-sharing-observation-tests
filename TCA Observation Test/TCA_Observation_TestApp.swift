@@ -4,13 +4,13 @@ import SwiftUI
 @main
 struct TCA_Observation_TestApp: App {
   static let store = Store(
-    initialState: IdealSharedRootFeature.State()
+    initialState: ObservableStateSharingRootFeature.State()
   ) {
-    IdealSharedRootFeature()
+    ObservableStateSharingRootFeature()
   }
-    var body: some Scene {
-        WindowGroup {
-          IdealSharedRootView(store: Self.store)
-        }
+  var body: some Scene {
+    WindowGroup {
+      ObservableStateSharingRootView(store: Self.store)
     }
+  }
 }
