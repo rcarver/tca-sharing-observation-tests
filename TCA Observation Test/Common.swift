@@ -1,5 +1,5 @@
 import SwiftUI
-import ComposableArchitecture
+import Sharing
 
 struct RootValue: Equatable, Sendable {
   var count = 0
@@ -12,14 +12,14 @@ struct ChildValue: Equatable, Sendable {
   var toggle2 = false
 }
 
-@ObservableState
+@ObservableValue
 struct ObservableStateRootValue: Equatable, Sendable {
   var count = 0
   var child1 = ObservableStateChildValue()
   var child2 = ObservableStateChildValue()
 }
 
-@ObservableState
+@ObservableValue
 struct ObservableStateChildValue: Equatable, Sendable {
   var toggle1 = false
   var toggle2 = false
