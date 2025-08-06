@@ -12,6 +12,19 @@ struct ChildValue: Equatable, Sendable {
   var toggle2 = false
 }
 
+@ObservableState
+struct ObservableStateRootValue: Equatable, Sendable {
+  var count = 0
+  var child1 = ObservableStateChildValue()
+  var child2 = ObservableStateChildValue()
+}
+
+@ObservableState
+struct ObservableStateChildValue: Equatable, Sendable {
+  var toggle1 = false
+  var toggle2 = false
+}
+
 struct ToggleView: View {
   var name: String
   @Binding var isOn: Bool

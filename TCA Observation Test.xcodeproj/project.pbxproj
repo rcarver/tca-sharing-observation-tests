@@ -11,6 +11,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C4411A452E42B7920082449D /* swift-sharing */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "swift-sharing"; path = "../../OpenSource/swift-sharing"; sourceTree = SOURCE_ROOT; };
 		C4D7B3FC2E3CE3B600DF8C5A /* TCA Observation Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TCA Observation Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -39,6 +40,7 @@
 			children = (
 				C4D7B3FE2E3CE3B600DF8C5A /* TCA Observation Test */,
 				C4D7B3FD2E3CE3B600DF8C5A /* Products */,
+				C4411A452E42B7920082449D /* swift-sharing */,
 			);
 			sourceTree = "<group>";
 		};
