@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct TCA_Observation_TestApp: App {
+  static let vanilla = RootModel()
   static let tca = Store(
     initialState: RootFeature.State()
   ) {
@@ -27,6 +28,9 @@ struct TCA_Observation_TestApp: App {
     WindowGroup {
       NavigationStack {
         List {
+          NavigationLink("Vanilla SwiftUI") {
+            VanillaRootView(model: Self.vanilla)
+          }
           NavigationLink("TCA") {
             RootView(store: Self.tca)
           }
