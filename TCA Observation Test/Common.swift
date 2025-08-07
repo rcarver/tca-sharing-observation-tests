@@ -13,14 +13,14 @@ struct ChildValue: Equatable, Sendable {
 }
 
 @ObservableValue
-struct ObservableStateRootValue: Equatable, Sendable {
+struct ObservableRootValue: Equatable, Sendable {
   var count = 0
-  var child1 = ObservableStateChildValue()
-  var child2 = ObservableStateChildValue()
+  var child1 = ObservableChildValue()
+  var child2 = ObservableChildValue()
 }
 
 @ObservableValue
-struct ObservableStateChildValue: Equatable, Sendable {
+struct ObservableChildValue: Equatable, Sendable {
   var toggle1 = false
   var toggle2 = false
 }

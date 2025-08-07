@@ -7,31 +7,31 @@ import SwiftUI
 /// This version attempts to match the efficiency of StateFeature by extending
 /// Sharing to use ObservableState
 @Reducer
-public struct ObservableStateSharingRootFeature {
+public struct ObservableSharedRootFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @Shared var root: ObservableStateRootValue
-    var child1: ObservableStateSharingChildFeature.State
-    var child2: ObservableStateSharingChildFeature.State
-    init(root: Shared<ObservableStateRootValue> = Shared(value: .init())) {
+    @Shared var root: ObservableRootValue
+    var child1: ObservableSharedChildFeature.State
+    var child2: ObservableSharedChildFeature.State
+    init(root: Shared<ObservableRootValue> = Shared(value: .init())) {
       _root = root
-      child1 = ObservableStateSharingChildFeature.State(child: root.child1)
-      child2 = ObservableStateSharingChildFeature.State(child: root.child2)
+      child1 = ObservableSharedChildFeature.State(child: root.child1)
+      child2 = ObservableSharedChildFeature.State(child: root.child2)
     }
   }
   public enum Action: Sendable {
-    case child1(ObservableStateSharingChildFeature.Action)
-    case child2(ObservableStateSharingChildFeature.Action)
+    case child1(ObservableSharedChildFeature.Action)
+    case child2(ObservableSharedChildFeature.Action)
     case child1ToggleButtonTapped
     case incrementButtonTapped
   }
   public var body: some ReducerOf<Self> {
     Scope(state: \.child1, action: \.child1) {
-      ObservableStateSharingChildFeature()
+      ObservableSharedChildFeature()
     }
     Scope(state: \.child2, action: \.child2) {
-      ObservableStateSharingChildFeature()
+      ObservableSharedChildFeature()
     }
     Reduce { state, action in
       switch action {
@@ -49,12 +49,12 @@ public struct ObservableStateSharingRootFeature {
 }
 
 @Reducer
-public struct ObservableStateSharingChildFeature {
+public struct ObservableSharedChildFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @Shared var child: ObservableStateChildValue
-    init(child: Shared<ObservableStateChildValue>) {
+    @Shared var child: ObservableChildValue
+    init(child: Shared<ObservableChildValue>) {
       _child = child
     }
   }
@@ -84,10 +84,10 @@ public struct ObservableStateSharingChildFeature {
   }
 }
 
-struct ObservableStateSharingRootView: View {
-  @Bindable var store: StoreOf<ObservableStateSharingRootFeature>
+struct ObservableSharedRootView: View {
+  @Bindable var store: StoreOf<ObservableSharedRootFeature>
   var body: some View {
-    let _ = ObservableStateSharingRootView._printChanges()
+    let _ = ObservableSharedRootView._printChanges()
     VStack {
       Text(store.root.count.formatted())
       Button("Increment") {
@@ -99,11 +99,11 @@ struct ObservableStateSharingRootView: View {
       HStack {
         VStack {
           Text("Child 1")
-          ObservableStateSharingChildView(store: store.scope(state: \.child1, action: \.child1))
+          ObservableSharedChildView(store: store.scope(state: \.child1, action: \.child1))
         }
         VStack {
           Text("Child 2")
-          ObservableStateSharingChildView(store: store.scope(state: \.child2, action: \.child2))
+          ObservableSharedChildView(store: store.scope(state: \.child2, action: \.child2))
         }
       }
       .padding()
@@ -113,10 +113,10 @@ struct ObservableStateSharingRootView: View {
   }
 }
 
-struct ObservableStateSharingChildView: View {
-  @Bindable var store: StoreOf<ObservableStateSharingChildFeature>
+struct ObservableSharedChildView: View {
+  @Bindable var store: StoreOf<ObservableSharedChildFeature>
   var body: some View {
-    let _ = ObservableStateSharingChildView._printChanges()
+    let _ = ObservableSharedChildView._printChanges()
     VStack {
       Button {
         store.send(.noopButtonTapped)
@@ -133,9 +133,9 @@ struct ObservableStateSharingChildView: View {
 
 #Preview {
   let store = Store(
-    initialState: ObservableStateSharingRootFeature.State()
+    initialState: ObservableSharedRootFeature.State()
   ) {
-    ObservableStateSharingRootFeature()
+    ObservableSharedRootFeature()
   }
-  ObservableStateSharingRootView(store: store)
+  ObservableSharedRootView(store: store)
 }

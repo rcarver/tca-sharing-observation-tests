@@ -3,14 +3,44 @@ import SwiftUI
 
 @main
 struct TCA_Observation_TestApp: App {
-  static let store = Store(
-    initialState: ObservableStateSharingRootFeature.State()
+  static let tca = Store(
+    initialState: RootFeature.State()
   ) {
-    ObservableStateSharingRootFeature()
+    RootFeature()
+  }
+  static let shared = Store(
+    initialState: SharedRootFeature.State()
+  ) {
+    SharedRootFeature()
+  }
+  static let idealShared = Store(
+    initialState: IdealSharedRootFeature.State()
+  ) {
+    IdealSharedRootFeature()
+  }
+  static let observableShared = Store(
+    initialState: ObservableSharedRootFeature.State()
+  ) {
+    ObservableSharedRootFeature()
   }
   var body: some Scene {
     WindowGroup {
-      ObservableStateSharingRootView(store: Self.store)
+      NavigationStack {
+        List {
+          NavigationLink("TCA") {
+            RootView(store: Self.tca)
+          }
+          NavigationLink("Shared") {
+            SharedRootView(store: Self.shared)
+          }
+          NavigationLink("Ideal Shared") {
+            IdealSharedRootView(store: Self.idealShared)
+          }
+          NavigationLink("Shared w/ ObservableValue") {
+            ObservableSharedRootView(store: Self.observableShared)
+          }
+        }
+      }
     }
   }
 }
