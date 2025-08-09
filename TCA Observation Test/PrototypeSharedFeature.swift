@@ -105,10 +105,10 @@ public struct IdealSharedRootFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @ObservedShared var root: Observed<RootValue>
+    @ObservedShared var root: Observed<SharedRootValue>
     var child1: IdealSharedChildFeature.State
     var child2: IdealSharedChildFeature.State
-    init(root: Shared<RootValue> = Shared(value: .init())) {
+    init(root: Shared<SharedRootValue> = Shared(value: .init())) {
       _root = ObservedShared(root)
       child1 = IdealSharedChildFeature.State(child: root.child1)
       child2 = IdealSharedChildFeature.State(child: root.child2)
@@ -147,8 +147,8 @@ public struct IdealSharedChildFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @ObservedShared var child: Observed<ChildValue>
-    init(child: Shared<ChildValue>) {
+    @ObservedShared var child: Observed<SharedChildValue>
+    init(child: Shared<SharedChildValue>) {
       _child = ObservedShared(child)
     }
   }

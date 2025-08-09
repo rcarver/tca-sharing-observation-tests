@@ -14,7 +14,7 @@ struct TCA_Observation_TestApp: App {
   ) {
     SharedRootFeature()
   }
-  static let idealShared = Store(
+  static let prototypeShared = Store(
     initialState: IdealSharedRootFeature.State()
   ) {
     IdealSharedRootFeature()
@@ -37,11 +37,11 @@ struct TCA_Observation_TestApp: App {
           NavigationLink("Shared") {
             SharedRootView(store: Self.shared)
           }
-          NavigationLink("Ideal Shared") {
-            IdealSharedRootView(store: Self.idealShared)
-          }
           NavigationLink("Shared w/ ObservableValue") {
             ObservableSharedRootView(store: Self.observableShared)
+          }
+          NavigationLink("Shared Prototype using Property Wrapper to observe") {
+            IdealSharedRootView(store: Self.prototypeShared)
           }
         }
       }

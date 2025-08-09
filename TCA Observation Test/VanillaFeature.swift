@@ -68,6 +68,13 @@ struct VanillaChildView: View {
     .padding()
     .background(Color.random)
   }
+  struct TogglesView: View {
+    @Bindable var model: ChildModel
+    var body: some View {
+      ToggleView(name: "root 1", isOn: $model.toggle1)
+      ToggleView(name: "root 2", isOn: $model.toggle2)
+    }
+  }
 }
 
 #Preview {

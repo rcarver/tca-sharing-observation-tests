@@ -7,13 +7,12 @@ import SwiftUI
 public struct RootFeature {
   @ObservableState
   public struct State: Equatable {
-    var root: RootValue
+    var count = 0
     var child1: ChildFeature.State
     var child2: ChildFeature.State
-    init(root: RootValue = .init()) {
-      self.root = root
-      child1 = ChildFeature.State(child: root.child1)
-      child2 = ChildFeature.State(child: root.child2)
+    init() {
+      child1 = ChildFeature.State()
+      child2 = ChildFeature.State()
     }
   }
   public enum Action: Sendable {
@@ -33,7 +32,7 @@ public struct RootFeature {
       case .child1, .child2:
         return .none
       case .incrementButtonTapped:
-        state.root.count += 1
+        state.count += 1
         return .none
       }
     }
@@ -44,12 +43,8 @@ public struct RootFeature {
 public struct ChildFeature {
   @ObservableState
   public struct State: Equatable {
-    var child: ChildValue
-    init(
-      child: ChildValue
-    ) {
-      self.child = child
-    }
+    var toggle1 = false
+    var toggle2 = false
   }
   public enum Action: Sendable, BindableAction {
     case binding(BindingAction<State>)
@@ -62,7 +57,7 @@ public struct ChildFeature {
       case .binding:
         return .none
       case .noopButtonTapped:
-        state.child.toggle1 = state.child.toggle1
+        state.toggle1 = state.toggle1
         return .none
       }
     }
@@ -74,7 +69,7 @@ struct RootView: View {
   var body: some View {
     let _ = RootView._printChanges()
     VStack {
-      Text(store.root.count.formatted())
+      Text(store.count.formatted())
       Button("Increment") {
         store.send(.incrementButtonTapped)
       }
@@ -105,11 +100,17 @@ struct ChildView: View {
       } label: {
         Text("Noop")
       }
-      ToggleView(name: "root 1", isOn: $store.child.toggle1)
-      ToggleView(name: "root 2", isOn: $store.child.toggle2)
+      TogglesView(store: store)
     }
     .padding()
     .background(Color.random)
+  }
+  struct TogglesView: View {
+    @Bindable var store: StoreOf<ChildFeature>
+    var body: some View {
+      ToggleView(name: "root 1", isOn: $store.toggle1)
+      ToggleView(name: "root 2", isOn: $store.toggle2)
+    }
   }
 }
 

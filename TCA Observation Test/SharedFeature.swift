@@ -2,6 +2,17 @@ import ComposableArchitecture
 import Perception
 import SwiftUI
 
+struct SharedRootValue: Equatable, Sendable {
+  var count = 0
+  var child1 = SharedChildValue()
+  var child2 = SharedChildValue()
+}
+
+struct SharedChildValue: Equatable, Sendable {
+  var toggle1 = false
+  var toggle2 = false
+}
+
 /// This version implements the same feature but using Shared data. It suffers
 /// from over-observation, updating the entire hierarchy on any change.
 @Reducer
@@ -9,10 +20,10 @@ public struct SharedRootFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @Shared var root: RootValue
+    @Shared var root: SharedRootValue
     var child1: SharedChildFeature.State
     var child2: SharedChildFeature.State
-    init(root: Shared<RootValue> = Shared(value: .init())) {
+    init(root: Shared<SharedRootValue> = Shared(value: .init())) {
       _root = root
       child1 = SharedChildFeature.State(child: _root.child1)
       child2 = SharedChildFeature.State(child: _root.child2)
@@ -47,9 +58,9 @@ public struct SharedChildFeature {
   @ObservableState
   public struct State: Equatable {
     @ObservationStateIgnored
-    @Shared var child: ChildValue
+    @Shared var child: SharedChildValue
     init(
-      child: Shared<ChildValue>
+      child: Shared<SharedChildValue>
     ) {
       _child = child
     }
