@@ -32,6 +32,7 @@ public struct SharedRootFeature {
   public enum Action: Sendable {
     case child1(SharedChildFeature.Action)
     case child2(SharedChildFeature.Action)
+    case child1ToggleButtonTapped
     case incrementButtonTapped
   }
   public var body: some ReducerOf<Self> {
@@ -44,6 +45,9 @@ public struct SharedRootFeature {
     Reduce { state, action in
       switch action {
       case .child1, .child2:
+        return .none
+      case .child1ToggleButtonTapped:
+        state.$root.withLock { $0.child1.toggle1.toggle() }
         return .none
       case .incrementButtonTapped:
         state.$root.withLock { $0.count += 1 }
@@ -86,11 +90,14 @@ public struct SharedChildFeature {
 struct SharedRootView: View {
   @Bindable var store: StoreOf<SharedRootFeature>
   var body: some View {
-    let _ = SharedRootView._printChanges()
+    let _ = Self._printChanges()
     VStack {
       Text(store.root.count.formatted())
       Button("Increment") {
         store.send(.incrementButtonTapped)
+      }
+      Button("Toggle child 1 toggle 1") {
+        store.send(.child1ToggleButtonTapped)
       }
       HStack {
         VStack {
@@ -112,15 +119,15 @@ struct SharedRootView: View {
 struct SharedChildView: View {
   @Bindable var store: StoreOf<SharedChildFeature>
   var body: some View {
-    let _ = SharedChildView._printChanges()
+    let _ = Self._printChanges()
     VStack {
       Button {
         store.send(.noopButtonTapped)
       } label: {
         Text("Noop")
       }
-      ToggleView(name: "root 1", isOn: $store.child.toggle1)
-      ToggleView(name: "root 2", isOn: $store.child.toggle2)
+      ToggleView(name: "child 1", isOn: $store.child.toggle1)
+      ToggleView(name: "child 2", isOn: $store.child.toggle2)
     }
     .padding()
     .background(Color.random)

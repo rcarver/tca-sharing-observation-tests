@@ -6,7 +6,8 @@ struct ToggleView: View {
   var name: String
   @Binding var isOn: Bool
   var body: some View {
-    let _ = print("evaluated ToggleView \(name)")
+    let _ = print("ToggleView \(name):")
+    let _ = Self._printChanges()
     Toggle("isOn", isOn: $isOn)
       .padding()
       .background(Color.random)

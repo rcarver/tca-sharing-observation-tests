@@ -15,6 +15,9 @@ final class ChildModel {
 }
 
 extension RootModel {
+  func child1ToggleButtonTapped() {
+    child1.toggle1.toggle()
+  }
   func incrementButtonTapped() {
     count += 1
   }
@@ -34,6 +37,9 @@ struct VanillaRootView: View {
       Text(model.count.formatted())
       Button("Increment") {
         model.incrementButtonTapped()
+      }
+      Button("Toggle child 1 toggle 1") {
+        model.child1ToggleButtonTapped()
       }
       HStack {
         VStack {
@@ -55,25 +61,18 @@ struct VanillaRootView: View {
 struct VanillaChildView: View {
   @Bindable var model: ChildModel
   var body: some View {
-    let _ = VanillaChildView._printChanges()
+    let _ = Self._printChanges()
     VStack {
       Button {
         model.noopButtonTapped()
       } label: {
         Text("Noop")
       }
-      ToggleView(name: "root 1", isOn: $model.toggle1)
-      ToggleView(name: "root 2", isOn: $model.toggle2)
+      ToggleView(name: "child 1", isOn: $model.toggle1)
+      ToggleView(name: "child 2", isOn: $model.toggle2)
     }
     .padding()
     .background(Color.random)
-  }
-  struct TogglesView: View {
-    @Bindable var model: ChildModel
-    var body: some View {
-      ToggleView(name: "root 1", isOn: $model.toggle1)
-      ToggleView(name: "root 2", isOn: $model.toggle2)
-    }
   }
 }
 

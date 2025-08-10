@@ -4,6 +4,19 @@ import Perception
 import Sharing
 import SwiftUI
 
+@ObservableValue
+struct ObservableRootValue: Equatable, Sendable {
+  var count = 0
+  var child1 = ObservableChildValue()
+  var child2 = ObservableChildValue()
+}
+
+@ObservableValue
+struct ObservableChildValue: Equatable, Sendable {
+  var toggle1 = false
+  var toggle2 = false
+}
+
 /// This version attempts to match the efficiency of StateFeature by extending
 /// Sharing to use ObservableState
 @Reducer
@@ -87,7 +100,7 @@ public struct ObservableSharedChildFeature {
 struct ObservableSharedRootView: View {
   @Bindable var store: StoreOf<ObservableSharedRootFeature>
   var body: some View {
-    let _ = ObservableSharedRootView._printChanges()
+    let _ = Self._printChanges()
     VStack {
       Text(store.root.count.formatted())
       Button("Increment") {
@@ -116,15 +129,15 @@ struct ObservableSharedRootView: View {
 struct ObservableSharedChildView: View {
   @Bindable var store: StoreOf<ObservableSharedChildFeature>
   var body: some View {
-    let _ = ObservableSharedChildView._printChanges()
+    let _ = Self._printChanges()
     VStack {
       Button {
         store.send(.noopButtonTapped)
       } label: {
         Text("Noop")
       }
-      ToggleView(name: "root 1", isOn: $store.child.toggle1.sending(\.toggle1))
-      ToggleView(name: "root 2", isOn: $store.child.toggle2.sending(\.toggle2))
+      ToggleView(name: "child 1", isOn: $store.child.toggle1.sending(\.toggle1))
+      ToggleView(name: "child 2", isOn: $store.child.toggle2.sending(\.toggle2))
     }
     .padding()
     .background(Color.random)

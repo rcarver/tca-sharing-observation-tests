@@ -18,6 +18,7 @@ public struct RootFeature {
   public enum Action: Sendable {
     case child1(ChildFeature.Action)
     case child2(ChildFeature.Action)
+    case child1ToggleButtonTapped
     case incrementButtonTapped
   }
   public var body: some ReducerOf<Self> {
@@ -30,6 +31,9 @@ public struct RootFeature {
     Reduce { state, action in
       switch action {
       case .child1, .child2:
+        return .none
+      case .child1ToggleButtonTapped:
+        state.child1.toggle1.toggle()
         return .none
       case .incrementButtonTapped:
         state.count += 1
@@ -67,11 +71,14 @@ public struct ChildFeature {
 struct RootView: View {
   @Bindable var store: StoreOf<RootFeature>
   var body: some View {
-    let _ = RootView._printChanges()
+    let _ = Self._printChanges()
     VStack {
       Text(store.count.formatted())
       Button("Increment") {
         store.send(.incrementButtonTapped)
+      }
+      Button("Toggle child 1 toggle 1") {
+        store.send(.child1ToggleButtonTapped)
       }
       HStack {
         VStack {
@@ -93,24 +100,18 @@ struct RootView: View {
 struct ChildView: View {
   @Bindable var store: StoreOf<ChildFeature>
   var body: some View {
-    let _ = ChildView._printChanges()
+    let _ = Self._printChanges()
     VStack {
       Button {
         store.send(.noopButtonTapped)
       } label: {
         Text("Noop")
       }
-      TogglesView(store: store)
+      ToggleView(name: "child 1", isOn: $store.toggle1)
+      ToggleView(name: "child 2", isOn: $store.toggle2)
     }
     .padding()
     .background(Color.random)
-  }
-  struct TogglesView: View {
-    @Bindable var store: StoreOf<ChildFeature>
-    var body: some View {
-      ToggleView(name: "root 1", isOn: $store.toggle1)
-      ToggleView(name: "root 2", isOn: $store.toggle2)
-    }
   }
 }
 

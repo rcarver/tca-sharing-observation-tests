@@ -181,7 +181,7 @@ public struct IdealSharedChildFeature {
 struct IdealSharedRootView: View {
   @Bindable var store: StoreOf<IdealSharedRootFeature>
   var body: some View {
-    let _ = IdealSharedRootView._printChanges()
+    let _ = Self._printChanges()
     VStack {
       Text(store.root.count.formatted())
       Button("Increment") {
@@ -217,8 +217,8 @@ struct IdealSharedChildView: View {
       } label: {
         Text("Noop")
       }
-      ToggleView(name: "root 1", isOn: $store.child.toggle1.sending(\.toggle1))
-      ToggleView(name: "root 2", isOn: $store.child.toggle2.sending(\.toggle2))
+      ToggleView(name: "child 1", isOn: $store.child.toggle1.sending(\.toggle1))
+      ToggleView(name: "child 2", isOn: $store.child.toggle2.sending(\.toggle2))
     }
     .padding()
     .background(Color.random)
