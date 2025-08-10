@@ -4,5 +4,5 @@ Working repo to explore observation with TCA and Sharing. Goal is to implement i
 
 Uses two developmental branches to improve observation in Sharing and TCA:
 
-* https://github.com/rcarver/swift-sharing/pull/2
-* https://github.com/rcarver/swift-composable-architecture/pull/1
+* [rcarver/swift-sharing/improved-observation](https://github.com/rcarver/swift-sharing/pull/2)
+* [rcarver/swift-composable-architecture/should-notify-observers](https://github.com/rcarver/swift-composable-architecture/pull/1)
