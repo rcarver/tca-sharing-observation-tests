@@ -36,9 +36,9 @@ struct TCA_Observation_TestApp: App {
         Sample("TCA") {
           RootView(store: Self.tca)
         } description: {
-          Text("TCA features using @ObservableState (with shouldNotifyObservers) support")
-          Text("Exhibits ideal view updates")
-          Text("With `main` branch, the Noop button causes a view update")
+          Text("TCA features using @ObservableState")
+          Text("Exhibits ideal view updates > 1.21.1")
+          Text("Previously, noop caused updates")
         }
         Sample("TCA + Shared") {
           SharedRootView(store: Self.shared)
